@@ -5,7 +5,7 @@
             "name": "Debug Rust Program",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/target/release/spreadsheet",
+            "program": "${workspaceFolder}/target/debug/spreadsheet",
             "args": [
                 "999",
                 "18278"

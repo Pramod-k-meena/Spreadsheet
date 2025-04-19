@@ -3,7 +3,7 @@
 all: clean target/release/spreadsheet
 
 target/release/spreadsheet:
-	cargo build --release
+	cargo build 
 
 clean:
 	cargo clean

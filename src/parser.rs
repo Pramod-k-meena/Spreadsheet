@@ -10,39 +10,42 @@ pub enum Operand {
 
 impl Parser {
     pub fn cell_name_to_coord(s: &str) -> Option<(u16, u16)> {
-        let mut col = 0u16;
-        let mut row_str = String::new();
-        for ch in s.chars() {
-            if ch.is_ascii_alphabetic() {
-                col = col
-                    .checked_mul(26)?
-                    .checked_add((ch.to_ascii_uppercase() as u16 - b'A' as u16 + 1))?;
-            } else if ch.is_ascii_digit() {
-                row_str.push(ch);
-            } else {
+        let trimmed = s.trim();
+        // Ensure the string starts with a letter.
+        let mut chars = trimmed.chars();
+        if let Some(first) = chars.next() {
+            if !first.is_alphabetic() {
                 return None;
             }
+        } else {
+            return None;
         }
-        let row = u16::from_str(&row_str).ok()?;
+        // Now parse the letter(s) and number(s)
+        let letters: String = trimmed.chars().take_while(|c| c.is_alphabetic()).collect();
+        let numbers: String = trimmed.chars().skip_while(|c| c.is_alphabetic()).collect();
+
+        if letters.is_empty() || numbers.is_empty() {
+            return None;
+        }
+    
+        // Convert letters to a column index and numbers to a row index.
+        let col = letters.chars().fold(0, |acc, c| acc * 26 + ((c.to_ascii_uppercase() as u16) - ('A' as u16) + 1));
+        let row = numbers.parse::<u16>().ok()?;
+    
         Some((col, row))
     }
 
     /// Parses B1+C2 or 2+3 or B1+2 or 2+B1 into (op_code, lhs_str, rhs_str).
     /// op_code: 1='+', 2='-', 3='*', 5='/'.
-    pub fn split_binary(expr: &str) -> Option<(i8, &str, &str)> {
-        let ops = ['+', '-', '*', '/'];
-        for (i, ch) in expr.char_indices().skip(1) {
-            if ops.contains(&ch) {
-                let code = match ch {
-                    '+' => 1,
-                    '-' => 2,
-                    '*' => 3,
-                    '/' => 5,
-                    _ => unreachable!(),
-                };
-                let lhs = expr[..i].trim();
-                let rhs = expr[i + 1..].trim();
-                return Some((code, lhs, rhs));
+    pub fn split_binary(expr: &str) -> Option<(char, &str, &str)> {
+        // Try each operator in order of precedence or as needed.
+        for op in ['+', '-', '*', '/'] {
+            if let Some(idx) = expr.find(op) {
+                let (lhs, rest) = expr.split_at(idx);
+                let rhs = &rest[1..];
+                if !lhs.trim().is_empty() && !rhs.trim().is_empty() {
+                    return Some((op, lhs, rhs));
+                }
             }
         }
         None
