@@ -1,80 +1,101 @@
-use std::collections::BTreeSet;
-use crate::spreadsheet::Spreadsheet;
-use crate::function::set_only_value;
+// use crate::parser::Parser;
+// use crate::spreadsheet::Spreadsheet;
+// use std::collections::HashSet;
 
-/// Add dependency: mark that `dependent_idx` depends on `source_idx`.
-pub fn add_dependent_and_precedent(sheet: &mut Spreadsheet, source_idx: usize, dependent_idx: usize) {
-    {
-        let source = &mut sheet.cells[source_idx];
-        source.dependents.insert(dependent_idx);
-    }
-    {
-        let dependent = &mut sheet.cells[dependent_idx];
-        dependent.precedents.insert(source_idx);
-    }
-}
+// /// Register dependency relationships for a range function.
+// /// For a target cell (the one holding the range function formula), add each cell in the range
+// /// as having the target cell as a parent.
+// pub fn register_range_dependencies(
+//     sheet: &mut Spreadsheet,
+//     target: (u16, u16),
+//     range_str: &str,
+// ) -> Result<(), i32> {
+//     if let Some((_op, start, end)) = Parser::parse_range_formula(range_str) {
+//         // Parser::label_to_coord returns (col, row) as 1-indexed.
+//         let (start_col, start_row) = start;
+//         let (end_col, end_row) = end;
+//         // Iterate over the range: convert to zero-based indices for iteration, then back to 1-indexed keys.
+//         for row in (start_row - 1)..=(end_row - 1) {
+//             for col in (start_col - 1)..=(end_col - 1) {
+//                 sheet.parents.entry((row+1,col+1)).or_default().insert(target);
+//             }
+//         }
+//         Ok(())
+//     } else {
+//         Err(1)
+//     }
+// }
 
-/// Remove a dependent relationship.
-pub fn remove_dependent(sheet: &mut Spreadsheet, main_idx: usize, dependent_idx: usize) {
-    if let Some(cell) = sheet.cells.get_mut(main_idx) {
-        cell.dependents.remove(&dependent_idx);
-    }
-}
+// /// Add a dependency: mark that the cell at `dependent` has the cell at `source` as a parent.
+// pub fn add_dependent_and_precedent(sheet: &mut Spreadsheet, parent: (u16, u16), child: (u16, u16)) {
+//     sheet.parents.entry(child).or_default().insert(parent);
+// }
 
-/// Remove a precedent relationship.
-pub fn remove_precedent(sheet: &mut Spreadsheet, main_idx: usize, precedent_idx: usize) {
-    if let Some(cell) = sheet.cells.get_mut(main_idx) {
-        cell.precedents.remove(&precedent_idx);
-    }
-}
+// /// Remove the dependency of `child` on `parent`.
+// pub fn remove_dependent(sheet: &mut Spreadsheet, parent: (u16, u16), child: (u16, u16)) {
+//     if let Some(parents_set) = sheet.parents.get_mut(&child) {
+//         parents_set.remove(&parent);
+//         if parents_set.is_empty() {
+//             sheet.parents.remove(&child);
+//         }
+//     }
+// }
 
-/// Remove all precedents for the cell at index `cell_idx`.
-pub fn remove_all_precedents(sheet: &mut Spreadsheet, cell_idx: usize) {
-    let precedents: Vec<usize> = sheet.cells[cell_idx].precedents.iter().copied().collect();
-    for &p in &precedents {
-        remove_dependent(sheet, p, cell_idx);
-    }
-    sheet.cells[cell_idx].precedents.clear();
-}
+// /// Remove all precedent (parent) dependencies from the given child cell.
+// pub fn remove_all_precedents(sheet: &mut Spreadsheet, child: (u16, u16)) {
+//     sheet.parents.remove(&child);
+// }
 
-/// Check for a cycle starting at `start_idx` using DFS.
-pub fn has_cycle(sheet: &Spreadsheet, start_idx: usize) -> bool {
-    fn dfs(sheet: &Spreadsheet, cur: usize, start_idx: usize, visited: &mut BTreeSet<usize>) -> bool {
-        if cur == start_idx && !visited.is_empty() {
-            return true;
-        }
-        if !visited.insert(cur) {
-            return false;
-        }
-        let cell = &sheet.cells[cur];
-        for &dep in &cell.dependents {
-            if dfs(sheet, dep, start_idx, visited) {
-                return true;
-            }
-        }
-        false
-    }
-    let mut visited = BTreeSet::new();
-    dfs(sheet, start_idx, start_idx, &mut visited)
-}
+// /// Returns true if there is a path from `from` → `to` in the current dependency graph.
+// // fn has_cycle(sheet: &mut Spreadsheet, from: (u16, u16), to: (u16, u16), visited: &mut HashSet<(u16, u16)>) -> bool {
+// //     // If we’ve reached the target, there’s a cycle.
+// //     if from == to {
+// //         return true;
+// //     }
+// //     // Avoid infinite loops
+// //     if !visited.insert(from) {
+// //         return false;
+// //     }
 
-/// Recalculate all dependent cells (in topologically–sorted order) starting from `start_idx`.
-pub fn recalc_dependents(sheet: &mut Spreadsheet, start_idx: usize) {
-    fn dfs(sheet: &Spreadsheet, cur: usize, visited: &mut BTreeSet<usize>, order: &mut Vec<usize>) {
-        if visited.contains(&cur) {
-            return;
-        }
-        visited.insert(cur);
-        for &dep in &sheet.cells[cur].dependents {
-            dfs(sheet, dep, visited, order);
-        }
-        order.push(cur);
-    }
-    let mut visited = BTreeSet::new();
-    let mut order = Vec::new();
-    dfs(sheet, start_idx, &mut visited, &mut order);
-    order.reverse();
-    for idx in order {
-        set_only_value(sheet, idx);
-    }
-}
+// //     // Look at all formula‑cells that depend on `from`:
+// //     if let Some(children) = self.parents.get(&from) {
+// //         for &child in children {
+// //             if self.has_path(child, to, visited) {
+// //                 return true;
+// //             }
+// //         }
+// //     }
+// //     false
+// // }
+
+
+// /// Recalculate all dependent cells (i.e. those cells that have the given cell in their parent set)
+// /// in a topologically sorted order. In this implementation, we compute dependents by traversing the
+// /// dependency graph stored in `parents`. (You will need to implement a proper re-evaluation routine.)
+// pub fn recalc_dependents(sheet: &mut Spreadsheet, start: (u16, u16)) {
+//     let mut order = Vec::new();
+//     let mut visited = HashSet::new();
+
+//     // A DFS that collects cell keys in a post-order.
+//     fn dfs(
+//         sheet: &Spreadsheet,
+//         node: (u16, u16),
+//         visited: &mut HashSet<(u16, u16)>,
+//         order: &mut Vec<(u16, u16)>,
+//     ) {
+//         for (&child, parents) in &sheet.parents {
+//             if parents.contains(&node) && !visited.contains(&child) {
+//                 visited.insert(child);
+//                 dfs(sheet, child, visited, order);
+//                 order.push(child);
+//             }
+//         }
+//     }
+//     dfs(sheet, start, &mut visited, &mut order);
+
+//     // Here, you would re-evaluate each dependent cell's formula and update its value.
+//     // For now, this is a placeholder demonstrating iteration over dependents.
+//     for cell_key in order {
+//         // e.g., recalc_cell(sheet, cell_key);
+//     }
+// }

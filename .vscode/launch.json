@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Rust Program",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/release/spreadsheet",
+            "args": [
+                "999",
+                "18278"
+            ], // or any values you want for rows and cols
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false,
+            "sourceLanguages": [
+                "rust"
+            ]
+        }
+    ]
+}

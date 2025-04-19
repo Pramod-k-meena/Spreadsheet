@@ -1,0 +1,22 @@
+# Cargo.toml
+
+[package]
+name = "spreadsheet"  # Name of the Rust package
+version = "0.1.0"  # Version of the package
+edition = "2021"  # Rust edition (2024 is not officially released, 2021 is the latest stable)
+
+[dependencies]
+rand = "0.8.5"  # Random number generation library
+text_io = "0.1.12"  # Library for reading user input
+serde = { version = "1.0", features = ["derive"] }  # Serialization and deserialization support
+serde_json = "1.0"  # JSON parsing and generation
+regex = "1.10"  # Regular expressions support
+clap = { version = "4.4", features = ["derive"] }  # Command-line argument parsing
+chrono = "0.4"  # Date and time library
+log = "0.4"  # Logging support
+env_logger = "0.10"  # Logger for environment-based configuration
+rayon = "1.7"  # Parallelism support
+
+[[bin]]
+name = "spreadsheet"
+path = "src/main.rs"

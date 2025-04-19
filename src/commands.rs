@@ -1,7 +1,7 @@
+use crate::parser::Parser;
+use crate::spreadsheet::Spreadsheet;
 use std::io::{self, BufRead, Write};
 use std::time::Instant;
-use crate::spreadsheet::{Spreadsheet, parse_cell_name};
-use crate::function::set_cell;
 
 pub fn handle_commands(sheet: &mut Spreadsheet) {
     let stdin = io::stdin();
@@ -16,16 +16,18 @@ pub fn handle_commands(sheet: &mut Spreadsheet) {
         "Invalid range",
         "unrecognized cmd",
         "Circular dependency",
-        "ok",
+        "Division_by_zero",
     ];
-    let mut which_message: i32 = 0; // Use i32 for compatibility with set_cell.
+    let mut which_message: u8 = 0;
     let mut last_instant = Instant::now();
 
     sheet.display(viewport_row, viewport_col, 10, 10);
     loop {
         let elapsed = last_instant.elapsed().as_secs_f64();
-        // Cast which_message to usize for array indexing.
-        print!("[{:.1}] ({}) > ", elapsed, status_messages[which_message as usize]);
+        print!(
+            "[{:.1}] ({}) > ",
+            elapsed, status_messages[which_message as usize]
+        );
         stdout.flush().unwrap();
         input.clear();
         if stdin.lock().read_line(&mut input).unwrap() == 0 {
@@ -34,7 +36,10 @@ pub fn handle_commands(sheet: &mut Spreadsheet) {
         last_instant = Instant::now();
         which_message = 0;
         let input_trimmed = input.trim_end();
+
         if input_trimmed == "q" {
+            break;
+        }if input_trimmed == "Q" {
             break;
         } else if input_trimmed == "disable_output" {
             output_enabled = false;
@@ -44,10 +49,14 @@ pub fn handle_commands(sheet: &mut Spreadsheet) {
         } else if input_trimmed.starts_with("scroll_to") {
             let parts: Vec<&str> = input_trimmed.split_whitespace().collect();
             if parts.len() >= 2 {
-                if let Some((row, col)) = parse_cell_name(parts[1]) {
-                    if row < sheet.rows && col < sheet.cols {
-                        viewport_row = row;
-                        viewport_col = col;
+                // Use the parser for label conversion.
+                if let Some((col, row)) = Parser::cell_name_to_coord(parts[1]) {
+                    // Convert 1-indexed to zero-indexed.
+                    let row_idx = row as usize - 1;
+                    let col_idx = col as usize - 1;
+                    if row_idx < sheet.rows && col_idx < sheet.cols {
+                        viewport_row = row_idx;
+                        viewport_col = col_idx;
                     } else {
                         which_message = 1;
                     }
@@ -78,10 +87,9 @@ pub fn handle_commands(sheet: &mut Spreadsheet) {
         } else if let Some(pos) = input_trimmed.find('=') {
             let (cell_str, expr) = input_trimmed.split_at(pos);
             let expr = &expr[1..]; // skip '='
-            if let Some((row, col)) = parse_cell_name(cell_str.trim()) {
-                let mut msg: i32 = 0;
-                set_cell(sheet, row, col, expr.trim(), &mut msg);
-                which_message = msg;
+                                   // Use Parser::label_to_coord for cell labels.
+            if let Some((col, row)) = Parser::cell_name_to_coord(cell_str.trim()) {
+                sheet.set_cell((col, row), expr);
             } else {
                 which_message = 1;
             }
