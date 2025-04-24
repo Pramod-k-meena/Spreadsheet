@@ -1,0 +1,8 @@
+//circular_dependency_with_sleep_cmd
+A1=1
+B1=A1
+C1=B1+A1
+D1=B1+C1
+A1=2
+A1=SLEEP(B1)
+q

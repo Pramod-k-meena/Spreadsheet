@@ -1,0 +1,10 @@
+//sleep_checker_if_dfs_working_or_not
+A1=1
+B1=SLEEP(A1)
+C1=B1+1
+D1=SLEEP(C1)
+E1=D1+1
+A2=SLEEP(E1)
+B2=A2+1
+A1=3
+q

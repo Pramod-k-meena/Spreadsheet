@@ -1,0 +1,5 @@
+//division_by_zero_propagation
+F1=10/0
+G1=F1+5
+E2=SUM(F1:G1)
+q

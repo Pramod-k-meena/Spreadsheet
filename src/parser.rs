@@ -1,12 +1,4 @@
-use std::str::FromStr;
-
-/// Parses either a 1‑based cell reference "A1" → Some((col, row)), or returns None.
 pub struct Parser;
-#[derive(Debug, Clone)]
-pub enum Operand {
-    Cell((u16, u16)),
-    Const(i32),
-}
 
 impl Parser {
     pub fn cell_name_to_coord(s: &str) -> Option<(u16, u16)> {
@@ -27,11 +19,13 @@ impl Parser {
         if letters.is_empty() || numbers.is_empty() {
             return None;
         }
-    
+
         // Convert letters to a column index and numbers to a row index.
-        let col = letters.chars().fold(0, |acc, c| acc * 26 + ((c.to_ascii_uppercase() as u16) - ('A' as u16) + 1));
+        let col = letters.chars().fold(0, |acc, c| {
+            acc * 26 + ((c.to_ascii_uppercase() as u16) - ('A' as u16) + 1)
+        });
         let row = numbers.parse::<u16>().ok()?;
-    
+
         Some((col, row))
     }
 

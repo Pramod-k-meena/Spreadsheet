@@ -1,5 +1,4 @@
 mod commands;
-mod dependencies;
 mod function;
 mod parser;
 mod spreadsheet;

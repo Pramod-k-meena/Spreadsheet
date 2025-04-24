@@ -89,7 +89,8 @@ pub fn handle_commands(sheet: &mut Spreadsheet) {
             let expr = &expr[1..]; // skip '='
                                    // Use Parser::label_to_coord for cell labels.
             if let Some((col, row)) = Parser::cell_name_to_coord(cell_str.trim()) {
-                sheet.set_cell((col, row), expr);
+                let message_code = sheet.set_cell((col, row), expr);
+                which_message = message_code;
             } else {
                 which_message = 1;
             }

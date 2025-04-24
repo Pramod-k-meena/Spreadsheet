@@ -1,0 +1,15 @@
+//check_scroll_cmds
+a 
+s 
+d 
+w
+d 
+d 
+d 
+w 
+w 
+a 
+s 
+scroll_to A0
+scroll_to C5
+q

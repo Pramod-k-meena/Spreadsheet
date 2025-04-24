@@ -1,0 +1,29 @@
+//checking_all_fnxns
+A1=1
+B1=2
+C1=3
+D1=4
+E1=5
+F1=SUM(A1:E1)
+A2=F1+1
+B2=A2+1
+w
+C2=B2+1
+D2=C2+1
+E2=D2+1
+F2=SUM(A2:E2)
+A1=10
+a
+disable_output
+A3=F1*F2
+B3=STDEV(A1:F2)
+s
+C3=MAX(A1:B3)
+D3=MIN(A1:C3)
+d
+E4=AVG(A1:D3)
+E5=SLEEP(1)
+enable_output
+scroll_to D3
+scroll_to A1
+q
